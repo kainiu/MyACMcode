@@ -15,18 +15,25 @@ int main()
 	cout<<nn<<endl;
 	for (int j=1;j<=nn;++j)
 	{
-		n=m=100000;
+		n=m=10;
 		cout<<n<<" "<<m<<endl;
-		for (int i=2;i<=n;++i)
+		for (int i=1;i<=n;++i)
 		{
-			printf("%d %d %d\n",myrand()%(i-1)+1,i,rand()%100+1);
+			printf("%d ",rand()%100-50);
 		}
+		cout<<endl;
 		for (int i=1;i<=m;++i)
 		{
-			int x,y;
-			x=rand()%2+1;
-			y=myrand()%n+1;
-			printf("%d %d\n",x,y);
+			int x,y,z;
+			x=rand()%2;
+			y=rand()%n+1;
+			if (x==0)
+			{
+				z=rand()%n+1;
+				if (z<y) swap(y,z);
+			}
+			else z=rand()%100-50;
+			printf("%d %d %d\n",x,y,z);
 		}
 	}
 	return 0;

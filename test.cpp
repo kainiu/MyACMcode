@@ -1,152 +1,145 @@
-#include <bits/stdc++.h>
-using namespace std;
-#define prt(k) cerr<<#k" = "<<k<<endl
-typedef unsigned long long ll;
+#include "stdio.h"
+#include "string.h"
+const __int64 inf=0x3f3f3f3f3f3f3f3f;
+__int64 ans,a[100100];
 
-const int N = 233333;
-int n, m, head[N], mm;
-struct Edge
+struct node
 {
-    int to, next, w;
-} e[N << 1];
-void add(int u, int v, int w = 1)
+    int l,r;
+    __int64 ee,eo,oe,oo;
+}data[400010];
+
+__int64 Max(__int64 a,__int64 b)
 {
-    e[mm].to = v;
-    e[mm].next = head[u];
-    e[mm].w = w;
-    head[u] = mm++;
+    if (a<b) return b;else return a;
 }
-int sz[N], dep[N];
-int f[N][22]; /// f[i][j] 表示 i 的第 2^j 个祖先
-int dfn[N];  ///dfs index
-int cur;
-int id[N]; /// you dfs xu qiu chu bian hao
-int len[N];
-void dfs(int u, int fa) /// 点从 1 开始标号
+
+void Pushup(int k)
 {
-    f[u][0] = fa;
-    sz[u] = 1;
-    dfn[u] = ++cur;
-    id[cur] = u;
-    for (int i=head[u]; ~i; i=e[i].next)
+    data[k].ee=Max(-inf,Max(data[k*2].ee+data[k*2+1].oe,data[k*2].eo+data[k*2+1].ee));
+    data[k].ee=Max(data[k].ee,data[k*2].ee);
+    data[k].ee=Max(data[k].ee,data[k*2+1].ee);
+
+    data[k].oo=Max(-inf,Max(data[k*2].oo+data[k*2+1].eo,data[k*2].oe+data[k*2+1].oo));
+    data[k].oo=Max(data[k].oo,data[k*2].oo);
+    data[k].oo=Max(data[k].oo,data[k*2+1].oo);
+
+    data[k].eo=Max(-inf,Max(data[k*2].ee+data[k*2+1].oo,data[k*2].eo+data[k*2+1].eo));
+    data[k].eo=Max(data[k].eo,data[k*2].eo);
+    data[k].eo=Max(data[k].eo,data[k*2+1].eo);
+
+    data[k].oe=Max(-inf,Max(data[k*2].oo+data[k*2+1].ee,data[k*2].oe+data[k*2+1].oe));
+    data[k].oe=Max(data[k].oe,data[k*2].oe);
+    data[k].oe=Max(data[k].oe,data[k*2+1].oe);
+}
+
+void build(int l,int r,int k)
+{
+    int mid;
+    data[k].l=l;
+    data[k].r=r;
+    if (l==r)
     {
-        int v = e[i].to;
-        int w = e[i].w;
-        if (v != fa)
+        if (l%2==1)
         {
-            dep[v] = dep[u] + 1;
-            len[v] = len[u] + w;
-            dfs(v, u);
-            sz[u] += sz[v];
+            data[k].oo=a[l];
+            data[k].oe=data[k].eo=data[k].ee=-inf;
         }
+        else
+        {
+            data[k].ee=a[l];
+            data[k].oe=data[k].eo=data[k].oo=-inf;
+        }
+        return ;
     }
-}
-int maxh;
-void gao()
-{
-    cur = 0;
-    dep[0] = -1;
-    len[1] = dep[1] = 0;
-    f[1][0] = 1;
-    dfs(1, 0);f[1][0] = 1;
-    int j;
-    for (j=1; (1<<j)<n; j++)
-        for (int i=1; i<=n; i++)
-            f[i][j] = f[f[i][j-1]][j-1];
-    maxh = j - 1;
-}
-int swim(int x, int k)
-{
-    for (int i=0; i<=maxh; i++)
-        if (k >> i & 1)
-            x = f[x][i];
-    return x;
-}
-int LCA(int x, int y)
-{
-    if (dep[x] > dep[y]) swap(x, y); ///dep[x] <= dep[y];
-    y = swim(y, dep[y] - dep[x]);
-    if (x == y) return y;
-    for (int i=maxh; i>=0; i--)
-    {
-        if (f[x][i] != f[y][i])
-            x = f[x][i], y = f[y][i];
-    }
-    return f[x][0];
-}
-int Q;
 
-set<int> se;
-set<int>::iterator it;
-int dist(int x, int y)
-{
-    int lca = LCA(x, y);
-    return len[x] - len[lca] + len[y] - len[lca];
+    mid=(l+r)/2;
+
+    build(l,mid,k*2);
+    build(mid+1,r,k*2+1);
+
+    Pushup(k);
 }
-int solve(int u)
+
+void updata(int n,int x,int k)
 {
-    if (se.empty()) return 0;
-    int x, y;
-    int t = *se.begin();
-    it = se.lower_bound( u);
-    y = *it;
-    it--;
-    x = *(it );
-    int t2 = *se.rbegin();
-    x = id[x];
-    y = id[y];
-    if (t2 < u || t > u)
+    if (data[k].l==n && data[k].r==n)
     {
-        x = id[t]; y = id[t2];
+        if (data[k].l%2==1)
+        {
+            data[k].oo=x;
+            data[k].eo=data[k].oe=data[k].ee=-inf;
+        }
+        else
+        {
+            data[k].ee=x;
+            data[k].eo=data[k].oe=data[k].oo=-inf;
+        }
+        return ;
     }
-    u = id[u];
-    return len[u] - len[LCA(x,u) ] - len[LCA(y,u)] + len[LCA(x,y) ];
+
+    if (n<=data[k*2].r) updata(n,x,k*2);
+    else updata(n,x,k*2+1);
+
+    Pushup(k);
 }
+
+node search(int l,int r,int k)
+{
+    node temp,t1,t2;
+    int mid;
+    if (data[k].l==l && data[k].r==r)
+    {
+        temp.ee=data[k].ee;
+        temp.oo=data[k].oo;
+        temp.eo=data[k].eo;
+        temp.oe=data[k].oe;
+        return temp;
+    }
+
+    mid=(data[k].l+data[k].r)/2;
+    if (r<=mid) return search(l,r,k*2);
+    else
+        if (l>mid) return search(l,r,k*2+1);
+    else
+    {
+        t1=search(l,mid,k*2);
+        t2=search(mid+1,r,k*2+1);
+        temp.ee=Max(Max(Max(t1.ee+t2.oe,t1.eo+t2.ee),t1.ee),t2.ee);
+        temp.eo=Max(Max(Max(t1.eo+t2.eo,t1.ee+t2.oo),t1.eo),t2.eo);
+        temp.oo=Max(Max(Max(t1.oo+t2.eo,t1.oe+t2.oo),t1.oo),t2.oo);
+        temp.oe=Max(Max(Max(t1.oo+t2.ee,t1.oe+t2.oe),t1.oe),t2.oe);
+        return temp;
+    }
+}
+
 int main()
 {
-    int re;
-    cin>>re;
-    int ca=1;
-    while (re--)
+    int t,n,m,i,op,l,r;
+    node mark;
+    scanf("%d",&t);
+    while (t--)
     {
-        cin>>n>>Q;
-        mm = 0;
-        memset(head,-1,sizeof head);
-        for (int i=0; i<n-1; i++)
+        scanf("%d%d",&n,&m);
+        for (i=1;i<=n;i++)
+            scanf("%I64d",&a[i]);
+        build(1,n,1);
+        while (m--)
         {
-            int u, v, w;
-            scanf("%d%d%d", &u, &v, &w);
-            add(u, v, w);
-            add(v, u, w);
-        }
-        gao();
-        printf("Case #%d:\n", ca++);
-        se.clear();
-        int ans = 0;
-        while (Q--)
-        {
-            int op, u;
-            scanf("%d%d", &op, &u);
-            u = dfn[u];
-            if (op==1)
+            scanf("%d%d%d",&op,&l,&r);
+            if (op==0)
             {
-                it = se.find(u);
-                if (it==se.end())
-                {
-                    ans += solve(u);
-                    se.insert(u);
-                }
+                ans=-inf;
+                mark=search(l,r,1);
+                ans=Max(ans,mark.oo);
+                ans=Max(ans,mark.ee);
+                ans=Max(ans,mark.eo);
+                ans=Max(ans,mark.oe);
+
+                printf("%I64d\n",ans);
             }
             else
-            {
-                it = se.find(u);
-                if (it != se.end())
-                {
-                    se.erase(u);
-                    ans -= solve(u);
-                }
-            }
-            printf("%d\n", ans);
+                updata(l,r,1);
         }
     }
     return 0;
